@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salary Predictor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #7c3aed, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: #64748b;
+      margin-top: 6px;
+      font-size: 0.92rem;
+    }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #7c3aed;
+      margin-bottom: 16px;
+      margin-top: 28px;
+    }
+
+    .section-label:first-child { margin-top: 0; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    input[type="number"] {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input[type="number"]:focus {
+      border-color: #7c3aed;
+    }
+
+    .toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .toggle-btn {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 10px;
+      color: #64748b;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .toggle-btn.active {
+      background: #2d1b69;
+      border-color: #7c3aed;
+      color: #c4b5fd;
+    }
+
+    .toggle-btn span.dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #2d3148;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn.active span.dot {
+      background: #7c3aed;
+    }
+
+    .api-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .api-row input {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    .api-row input:focus { border-color: #38bdf8; color: #e2e8f0; }
+
+    button.predict-btn {
+      width: 100%;
+      margin-top: 28px;
+      padding: 14px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button.predict-btn:hover { opacity: 0.88; }
+    button.predict-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .result-box {
+      margin-top: 24px;
+      border-radius: 12px;
+      padding: 24px;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      text-align: center;
+      display: none;
+    }
+
+    .result-box.show { display: block; }
+
+    .result-box .lpa {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result-box .lpa-label {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .error-box {
+      margin-top: 16px;
+      background: #2a1215;
+      border: 1px solid #7f1d1d;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      color: #fca5a5;
+      display: none;
+    }
+
+    .error-box.show { display: block; }
+
+    .hint { font-size: 0.72rem; color: #475569; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Salary Predictor</h1>
+  <p>Fresher placement salary estimate · Linear Regression model</p>
+</header>
+
+<div class="card">
+
+  <!-- API URL config -->
+  <div class="section-label">Backend URL</div>
+  <div class="api-row">
+    <input type="text" id="apiUrl" placeholder="https://your-app.onrender.com" />
+  </div>
+
+  <!-- Academics -->
+  <div class="section-label">Academics</div>
+  <div class="grid-2">
+    <div class="field">
+      <label>CGPA <span class="hint">(0–10)</span></label>
+      <input type="number" id="cgpa" min="0" max="10" step="0.1" value="7.5" />
+    </div>
+    <div class="field">
+      <label>College Tier <span class="hint">(1 = Top, 3 = Average)</span></label>
+      <input type="number" id="college_tier" min="1" max="3" value="2" />
+    </div>
+    <div class="field">
+      <label>Backlogs</label>
+      <input type="number" id="backlogs" min="0" value="0" />
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="section-label">Technical Skills</div>
+  <div class="toggle-group">
+    <button class="toggle-btn" data-key="python_skill" onclick="toggle(this)">
+      <span class="dot"></span> Python
+    </button>
+    <button class="toggle-btn" data-key="dsa_skill" onclick="toggle(this)">
+      <span class="dot"></span> DSA
+    </button>
+    <button class="toggle-btn" data-key="ml_skill" onclick="toggle(this)">
+      <span class="dot"></span> Machine Learning
+    </button>
+    <button class="toggle-btn" data-key="web_dev_skill" onclick="toggle(this)">
+      <span class="dot"></span> Web Dev
+    </button>
+  </div>
+
+  <!-- Scores -->
+  <div class="section-label">Scores</div>
+  <div class="grid-2">
+    <div class="field">
+      <label>Communication Score <span class="hint">(0–100)</span></label>
+      <input type="number" id="communication_score" min="0" max="100" value="60" />
+    </div>
+    <div class="field">
+      <label>Aptitude Score <span class="hint">(0–100)</span></label>
+      <input type="number" id="aptitude_score" min="0" max="100" value="65" />
+    </div>
+    <div class="field">
+      <label>Resume Score <span class="hint">(0–100)</span></label>
+      <input type="number" id="resume_score" min="0" max="100" value="70" />
+    </div>
+  </div>
+
+  <!-- Experience -->
+  <div class="section-label">Experience</div>
+  <div class="grid-2">
+    <div class="field">
+      <label>Internships</label>
+      <input type="number" id="internships" min="0" value="0" />
+    </div>
+    <div class="field">
+      <label>Projects</label>
+      <input type="number" id="projects" min="0" value="1" />
+    </div>
+  </div>
+
+  <button class="predict-btn" id="predictBtn" onclick="predict()">Predict Salary</button>
+
+  <div class="result-box" id="resultBox">
+    <div class="lpa" id="salaryOutput">—</div>
+    <div class="lpa-label">Estimated Salary (LPA)</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+</div>
+
+<script>
+  const skillState = {
+    python_skill: 0,
+    dsa_skill: 0,
+    ml_skill: 0,
+    web_dev_skill: 0
+  };
+
+  function toggle(btn) {
+    const key = btn.dataset.key;
+    skillState[key] = skillState[key] === 1 ? 0 : 1;
+    btn.classList.toggle('active', skillState[key] === 1);
+  }
+
+  function getVal(id) {
+    return parseFloat(document.getElementById(id).value) || 0;
+  }
+
+  async function predict() {
+    const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+    if (!apiUrl) {
+      showError('Please enter your Render backend URL above.');
+      return;
+    }
+
+    const btn = document.getElementById('predictBtn');
+    btn.disabled = true;
+    btn.textContent = 'Predicting…';
+    hideError();
+    document.getElementById('resultBox').classList.remove('show');
+
+    const payload = {
+      cgpa: getVal('cgpa'),
+      college_tier: getVal('college_tier'),
+      python_skill: skillState.python_skill,
+      dsa_skill: skillState.dsa_skill,
+      ml_skill: skillState.ml_skill,
+      web_dev_skill: skillState.web_dev_skill,
+      communication_score: getVal('communication_score'),
+      aptitude_score: getVal('aptitude_score'),
+      internships: getVal('internships'),
+      projects: getVal('projects'),
+      backlogs: getVal('backlogs'),
+      resume_score: getVal('resume_score')
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Prediction failed.');
+        return;
+      }
+
+      document.getElementById('salaryOutput').textContent = data.predicted_salary_lpa + ' LPA';
+      document.getElementById('resultBox').classList.add('show');
+    } catch (e) {
+      showError('Could not reach the backend. Make sure the URL is correct and the server is running.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Predict Salary';
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = msg;
+    box.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('show');
+  }
+</script>
+</body>
+</html>
